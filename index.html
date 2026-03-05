@@ -144,13 +144,16 @@
             <span class="settings-icon">◎</span>
             <h3>錯別字修訂表</h3>
           </div>
-          <p class="settings-desc">上傳本書專屬的錯別字對照表（.txt 或 .docx），格式：每行一對，以「→」或「：」分隔</p>
+          <p class="settings-desc">上傳本書專屬的錯別字對照表，格式：每行一對，以「→」或「：」分隔</p>
           <div class="upload-zone" id="typoTableZone" onclick="document.getElementById('typoTableInput').click()">
-            <input type="file" id="typoTableInput" accept=".txt,.docx" style="display:none" onchange="handleTypoTableUpload(event)"/>
+            <input type="file" id="typoTableInput" accept=".txt,.docx,.pdf,.xlsx,.xls,.csv" style="display:none" onchange="handleTypoTableUpload(event)"/>
             <div class="upload-icon">↑</div>
             <div class="upload-text">點擊或拖曳上傳錯別字表</div>
-            <div class="upload-hint">支援 .txt / .docx</div>
+            <div class="upload-hint">支援 Word · PDF · Excel · TXT · CSV</div>
           </div>
+          <button class="btn-gdrive" onclick="GoogleDrive.openPicker('typoTable')">
+            <span class="gdrive-icon">▲</span> 從 Google Drive 選取
+          </button>
           <div class="upload-status" id="typoTableStatus"></div>
         </div>
 
@@ -161,11 +164,14 @@
           </div>
           <p class="settings-desc">上傳一篇已編排完成的文章作為格式與風格範例，AI 將依此修潤所有文章</p>
           <div class="upload-zone" id="articleSampleZone" onclick="document.getElementById('articleSampleInput').click()">
-            <input type="file" id="articleSampleInput" accept=".txt,.docx" style="display:none" onchange="handleArticleSampleUpload(event)"/>
+            <input type="file" id="articleSampleInput" accept=".txt,.docx,.pdf,.xlsx,.xls,.csv" style="display:none" onchange="handleArticleSampleUpload(event)"/>
             <div class="upload-icon">↑</div>
             <div class="upload-text">點擊或拖曳上傳文章範例</div>
-            <div class="upload-hint">支援 .txt / .docx</div>
+            <div class="upload-hint">支援 Word · PDF · Excel · TXT · CSV</div>
           </div>
+          <button class="btn-gdrive" onclick="GoogleDrive.openPickerForProject('articleSample')">
+            <span class="gdrive-icon">▲</span> 從 Google Drive 選取
+          </button>
           <div class="upload-status" id="articleSampleStatus"></div>
         </div>
 
@@ -176,11 +182,14 @@
           </div>
           <p class="settings-desc">上傳一份完整的新書資料範本，AI 將依此格式撰寫本書的新書資料</p>
           <div class="upload-zone" id="newbookSampleZone" onclick="document.getElementById('newbookSampleInput').click()">
-            <input type="file" id="newbookSampleInput" accept=".txt,.docx" style="display:none" onchange="handleNewbookSampleUpload(event)"/>
+            <input type="file" id="newbookSampleInput" accept=".txt,.docx,.pdf,.xlsx,.xls,.csv" style="display:none" onchange="handleNewbookSampleUpload(event)"/>
             <div class="upload-icon">↑</div>
             <div class="upload-text">點擊或拖曳上傳新書資料範例</div>
-            <div class="upload-hint">支援 .txt / .docx</div>
+            <div class="upload-hint">支援 Word · PDF · Excel · TXT · CSV</div>
           </div>
+          <button class="btn-gdrive" onclick="GoogleDrive.openPickerForProject('newbookSample')">
+            <span class="gdrive-icon">▲</span> 從 Google Drive 選取
+          </button>
           <div class="upload-status" id="newbookSampleStatus"></div>
         </div>
 
@@ -219,12 +228,15 @@
               <button class="tab-btn" onclick="switchTab('newbook','paste')">貼上文字</button>
             </div>
             <div class="tab-content active" id="newbook-upload">
-              <div class="upload-zone" onclick="document.getElementById('newbookFileInput').click()">
-                <input type="file" id="newbookFileInput" accept=".txt,.docx" style="display:none" onchange="handleNewbookFileUpload(event)"/>
+              <div class="upload-zone" id="newbook-upload-zone" onclick="document.getElementById('newbookFileInput').click()">
+                <input type="file" id="newbookFileInput" accept=".txt,.docx,.doc,.pdf,.xlsx,.xls,.csv" style="display:none" onchange="handleNewbookFileUpload(event)"/>
                 <div class="upload-icon">↑</div>
-                <div class="upload-text">上傳書稿檔案</div>
-                <div class="upload-hint">支援 .txt / .docx · 建議上傳完整書稿或章節節錄</div>
+                <div class="upload-text">點擊或拖曳上傳書稿</div>
+                <div class="upload-hint">支援 Word · PDF · Excel · TXT · CSV</div>
               </div>
+              <button class="btn-gdrive btn-gdrive-tool" onclick="GoogleDrive.openPicker('newbook')">
+                <span class="gdrive-icon">▲</span> 從 Google Drive 選取
+              </button>
               <div id="newbookUploadStatus"></div>
             </div>
             <div class="tab-content" id="newbook-paste">
@@ -299,12 +311,15 @@
               <button class="tab-btn" onclick="switchTab('typo','paste')">貼上文字</button>
             </div>
             <div class="tab-content active" id="typo-upload">
-              <div class="upload-zone" onclick="document.getElementById('typoFileInput').click()">
-                <input type="file" id="typoFileInput" accept=".txt,.docx" style="display:none" onchange="handleTypoFileUpload(event)"/>
+              <div class="upload-zone" id="typo-upload-zone" onclick="document.getElementById('typoFileInput').click()">
+                <input type="file" id="typoFileInput" accept=".txt,.docx,.doc,.pdf,.xlsx,.xls,.csv" style="display:none" onchange="handleTypoFileUpload(event)"/>
                 <div class="upload-icon">↑</div>
-                <div class="upload-text">上傳文章檔案</div>
-                <div class="upload-hint">支援 .txt / .docx</div>
+                <div class="upload-text">點擊或拖曳上傳文章</div>
+                <div class="upload-hint">支援 Word · PDF · Excel · TXT · CSV</div>
               </div>
+              <button class="btn-gdrive btn-gdrive-tool" onclick="GoogleDrive.openPicker('typo')">
+                <span class="gdrive-icon">▲</span> 從 Google Drive 選取
+              </button>
               <div id="typoUploadStatus"></div>
             </div>
             <div class="tab-content" id="typo-paste">
@@ -375,12 +390,15 @@
               <button class="tab-btn" onclick="switchTab('article','paste')">貼上文字</button>
             </div>
             <div class="tab-content active" id="article-upload">
-              <div class="upload-zone" onclick="document.getElementById('articleFileInput').click()">
-                <input type="file" id="articleFileInput" accept=".txt,.docx" style="display:none" onchange="handleArticleFileUpload(event)"/>
+              <div class="upload-zone" id="article-upload-zone" onclick="document.getElementById('articleFileInput').click()">
+                <input type="file" id="articleFileInput" accept=".txt,.docx,.doc,.pdf,.xlsx,.xls,.csv" style="display:none" onchange="handleArticleFileUpload(event)"/>
                 <div class="upload-icon">↑</div>
-                <div class="upload-text">上傳文章檔案</div>
-                <div class="upload-hint">支援 .txt / .docx</div>
+                <div class="upload-text">點擊或拖曳上傳文章</div>
+                <div class="upload-hint">支援 Word · PDF · Excel · TXT · CSV</div>
               </div>
+              <button class="btn-gdrive btn-gdrive-tool" onclick="GoogleDrive.openPicker('article')">
+                <span class="gdrive-icon">▲</span> 從 Google Drive 選取
+              </button>
               <div id="articleUploadStatus"></div>
             </div>
             <div class="tab-content" id="article-paste">
@@ -530,6 +548,9 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>if(typeof pdfjsLib !== 'undefined') pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/api.js"></script>
   <script src="js/projects.js"></script>
@@ -537,3 +558,4 @@
   <script src="js/app.js"></script>
 </body>
 </html>
+
