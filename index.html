@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>旅遊書編輯工作台</title>
+  <link rel="stylesheet" href="css/main.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;600;900&family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Sidebar Nav -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">編</div>
+      <div class="logo-text">
+        <span class="logo-main">旅途編輯台</span>
+        <span class="logo-sub">Travel Editorial Studio</span>
+      </div>
+    </div>
+
+    <div class="sidebar-project" id="sidebarProject">
+      <div class="project-label">目前專案</div>
+      <div class="project-name" id="currentProjectName">尚未選擇專案</div>
+      <button class="btn-switch-project" onclick="showPage('projects')">切換專案</button>
+    </div>
+
+    <ul class="sidebar-nav">
+      <li><a href="#" class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')">
+        <span class="nav-icon">◈</span><span>工作台首頁</span>
+      </a></li>
+      <li><a href="#" class="nav-item" data-page="projects" onclick="showPage('projects')">
+        <span class="nav-icon">◉</span><span>專案管理</span>
+      </a></li>
+      <li><a href="#" class="nav-item" data-page="newbook" onclick="showPage('newbook')">
+        <span class="nav-icon">✦</span><span>新書資料產生器</span>
+      </a></li>
+      <li><a href="#" class="nav-item" data-page="typo" onclick="showPage('typo')">
+        <span class="nav-icon">◎</span><span>錯別字修訂</span>
+      </a></li>
+      <li><a href="#" class="nav-item" data-page="article" onclick="showPage('article')">
+        <span class="nav-icon">◆</span><span>文章編輯潤稿</span>
+      </a></li>
+      <li><a href="#" class="nav-item" data-page="settings" onclick="showPage('settings')">
+        <span class="nav-icon">◌</span><span>API 設定</span>
+      </a></li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <div class="api-status" id="apiStatus">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">API 未設定</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <!-- DASHBOARD PAGE -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div class="page-header-text">
+          <h1 class="page-title">工作台</h1>
+          <p class="page-subtitle">旅遊書專業編輯系統 · Professional Travel Editorial Studio</p>
+        </div>
+        <div class="date-display" id="dateDisplay"></div>
+      </div>
+
+      <div class="dashboard-hero">
+        <div class="hero-card">
+          <div class="hero-decoration">Editorial</div>
+          <h2>歡迎回到編輯工作台</h2>
+          <p>選擇或建立一個書籍專案，開始今日的編輯工作。每個專案獨立保存您的錯別字表、文章格式範例與新書資料範例。</p>
+          <button class="btn-primary" onclick="showPage('projects')">進入專案管理 →</button>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="dash-card" onclick="showPage('newbook')">
+          <div class="dash-card-icon">✦</div>
+          <div class="dash-card-content">
+            <h3>新書資料產生器</h3>
+            <p>AI 自動抓取書籍賣點、目標讀者與特色列點，依格式範例輸出完整新書資料。</p>
+          </div>
+          <div class="dash-card-arrow">→</div>
+        </div>
+        <div class="dash-card" onclick="showPage('typo')">
+          <div class="dash-card-icon">◎</div>
+          <div class="dash-card-content">
+            <h3>錯別字修訂</h3>
+            <p>依據專案錯別字修訂表，自動掃描並標示文章中的錯誤用字，提供逐條修正建議。</p>
+          </div>
+          <div class="dash-card-arrow">→</div>
+        </div>
+        <div class="dash-card" onclick="showPage('article')">
+          <div class="dash-card-icon">◆</div>
+          <div class="dash-card-content">
+            <h3>文章編輯潤稿</h3>
+            <p>依照大標、中標、小標、Data、圖說等格式，AI 依據範例風格修潤文章。</p>
+          </div>
+          <div class="dash-card-arrow">→</div>
+        </div>
+      </div>
+
+      <div class="recent-projects" id="recentProjects">
+        <h3 class="section-title">近期專案</h3>
+        <div id="recentProjectsList"></div>
+      </div>
+    </div>
+
+    <!-- PROJECTS PAGE -->
+    <div class="page" id="page-projects">
+      <div class="page-header">
+        <div class="page-header-text">
+          <h1 class="page-title">專案管理</h1>
+          <p class="page-subtitle">建立與管理每本書籍的獨立編輯專案</p>
+        </div>
+        <button class="btn-primary" onclick="openNewProjectModal()">＋ 建立新專案</button>
+      </div>
+
+      <div class="projects-grid" id="projectsGrid"></div>
+
+      <div class="empty-state" id="projectsEmpty" style="display:none">
+        <div class="empty-icon">◈</div>
+        <h3>尚無專案</h3>
+        <p>點擊右上角「建立新專案」開始您的第一本書</p>
+      </div>
+    </div>
+
+    <!-- PROJECT SETTINGS (sub-page shown within projects) -->
+    <div class="page" id="page-project-settings">
+      <div class="page-header">
+        <div class="page-header-text">
+          <h1 class="page-title" id="projectSettingsTitle">專案設定</h1>
+          <p class="page-subtitle">設定此書專案的基礎資料庫</p>
+        </div>
+        <button class="btn-outline" onclick="showPage('projects')">← 返回專案列表</button>
+      </div>
+
+      <div class="settings-grid">
+        <div class="settings-card">
+          <div class="settings-card-header">
+            <span class="settings-icon">◎</span>
+            <h3>錯別字修訂表</h3>
+          </div>
+          <p class="settings-desc">上傳本書專屬的錯別字對照表（.txt 或 .docx），格式：每行一對，以「→」或「：」分隔</p>
+          <div class="upload-zone" id="typoTableZone" onclick="document.getElementById('typoTableInput').click()">
+            <input type="file" id="typoTableInput" accept=".txt,.docx" style="display:none" onchange="handleTypoTableUpload(event)"/>
+            <div class="upload-icon">↑</div>
+            <div class="upload-text">點擊或拖曳上傳錯別字表</div>
+            <div class="upload-hint">支援 .txt / .docx</div>
+          </div>
+          <div class="upload-status" id="typoTableStatus"></div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-card-header">
+            <span class="settings-icon">◆</span>
+            <h3>文章格式範例</h3>
+          </div>
+          <p class="settings-desc">上傳一篇已編排完成的文章作為格式與風格範例，AI 將依此修潤所有文章</p>
+          <div class="upload-zone" id="articleSampleZone" onclick="document.getElementById('articleSampleInput').click()">
+            <input type="file" id="articleSampleInput" accept=".txt,.docx" style="display:none" onchange="handleArticleSampleUpload(event)"/>
+            <div class="upload-icon">↑</div>
+            <div class="upload-text">點擊或拖曳上傳文章範例</div>
+            <div class="upload-hint">支援 .txt / .docx</div>
+          </div>
+          <div class="upload-status" id="articleSampleStatus"></div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-card-header">
+            <span class="settings-icon">✦</span>
+            <h3>新書資料範例</h3>
+          </div>
+          <p class="settings-desc">上傳一份完整的新書資料範本，AI 將依此格式撰寫本書的新書資料</p>
+          <div class="upload-zone" id="newbookSampleZone" onclick="document.getElementById('newbookSampleInput').click()">
+            <input type="file" id="newbookSampleInput" accept=".txt,.docx" style="display:none" onchange="handleNewbookSampleUpload(event)"/>
+            <div class="upload-icon">↑</div>
+            <div class="upload-text">點擊或拖曳上傳新書資料範例</div>
+            <div class="upload-hint">支援 .txt / .docx</div>
+          </div>
+          <div class="upload-status" id="newbookSampleStatus"></div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-card-header">
+            <span class="settings-icon">◉</span>
+            <h3>專案資料匯出／匯入</h3>
+          </div>
+          <p class="settings-desc">將整個專案的設定與資料匯出為 JSON 檔案備份，或匯入已備份的專案</p>
+          <div class="export-btns">
+            <button class="btn-outline" onclick="exportProject()">↓ 匯出專案備份</button>
+            <label class="btn-outline" style="cursor:pointer">
+              ↑ 匯入專案備份
+              <input type="file" accept=".json" style="display:none" onchange="importProject(event)"/>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEW BOOK DATA PAGE -->
+    <div class="page" id="page-newbook">
+      <div class="page-header">
+        <div class="page-header-text">
+          <h1 class="page-title">新書資料產生器</h1>
+          <p class="page-subtitle">AI 自動分析書稿，生成完整新書資料</p>
+        </div>
+      </div>
+
+      <div class="tool-layout">
+        <div class="tool-input-panel">
+          <div class="panel-section">
+            <h3 class="panel-title">上傳書稿</h3>
+            <div class="tab-group">
+              <button class="tab-btn active" onclick="switchTab('newbook','upload')">上傳檔案</button>
+              <button class="tab-btn" onclick="switchTab('newbook','paste')">貼上文字</button>
+            </div>
+            <div class="tab-content active" id="newbook-upload">
+              <div class="upload-zone" onclick="document.getElementById('newbookFileInput').click()">
+                <input type="file" id="newbookFileInput" accept=".txt,.docx" style="display:none" onchange="handleNewbookFileUpload(event)"/>
+                <div class="upload-icon">↑</div>
+                <div class="upload-text">上傳書稿檔案</div>
+                <div class="upload-hint">支援 .txt / .docx · 建議上傳完整書稿或章節節錄</div>
+              </div>
+              <div id="newbookUploadStatus"></div>
+            </div>
+            <div class="tab-content" id="newbook-paste">
+              <textarea class="text-input" id="newbookPasteText" placeholder="將書稿文字貼上於此…" rows="12"></textarea>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <h3 class="panel-title">產生選項</h3>
+            <div class="checkbox-group">
+              <label class="checkbox-item">
+                <input type="checkbox" id="genSellingPoints" checked/>
+                <span>書籍賣點（3～5 點）</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" id="genTargetReaders" checked/>
+                <span>目標讀者分析</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" id="genFeatures" checked/>
+                <span>特色列點（5～8 點）</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" id="genFollowSample" checked/>
+                <span>依新書資料範例格式輸出</span>
+              </label>
+            </div>
+          </div>
+
+          <button class="btn-primary btn-full" onclick="runNewbookGeneration()" id="newbookRunBtn">
+            <span>✦ 開始分析產生</span>
+          </button>
+        </div>
+
+        <div class="tool-output-panel">
+          <div class="output-header">
+            <h3>產生結果</h3>
+            <div class="output-actions" id="newbookOutputActions" style="display:none">
+              <button class="btn-small" onclick="copyOutput('newbookOutput')">複製</button>
+              <button class="btn-small" onclick="downloadOutput('newbookOutput','新書資料.txt')">下載</button>
+            </div>
+          </div>
+          <div class="output-area" id="newbookOutput">
+            <div class="output-placeholder">
+              <div class="placeholder-icon">✦</div>
+              <p>上傳書稿並點擊「開始分析產生」<br/>AI 將自動生成完整新書資料</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TYPO PAGE -->
+    <div class="page" id="page-typo">
+      <div class="page-header">
+        <div class="page-header-text">
+          <h1 class="page-title">錯別字修訂</h1>
+          <p class="page-subtitle">依據專案錯別字表，自動掃描並修正文稿</p>
+        </div>
+      </div>
+
+      <div class="typo-status-bar" id="typoStatusBar">
+        <span class="typo-table-indicator" id="typoTableIndicator">⚠ 尚未載入錯別字表，請先至專案設定上傳</span>
+      </div>
+
+      <div class="tool-layout">
+        <div class="tool-input-panel">
+          <div class="panel-section">
+            <h3 class="panel-title">上傳待修訂文章</h3>
+            <div class="tab-group">
+              <button class="tab-btn active" onclick="switchTab('typo','upload')">上傳檔案</button>
+              <button class="tab-btn" onclick="switchTab('typo','paste')">貼上文字</button>
+            </div>
+            <div class="tab-content active" id="typo-upload">
+              <div class="upload-zone" onclick="document.getElementById('typoFileInput').click()">
+                <input type="file" id="typoFileInput" accept=".txt,.docx" style="display:none" onchange="handleTypoFileUpload(event)"/>
+                <div class="upload-icon">↑</div>
+                <div class="upload-text">上傳文章檔案</div>
+                <div class="upload-hint">支援 .txt / .docx</div>
+              </div>
+              <div id="typoUploadStatus"></div>
+            </div>
+            <div class="tab-content" id="typo-paste">
+              <textarea class="text-input" id="typoPasteText" placeholder="將文章貼上於此…" rows="12"></textarea>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <h3 class="panel-title">修訂模式</h3>
+            <div class="radio-group">
+              <label class="radio-item">
+                <input type="radio" name="typoMode" value="highlight" checked/>
+                <span>標示錯誤（保留原文，標示需修改處）</span>
+              </label>
+              <label class="radio-item">
+                <input type="radio" name="typoMode" value="auto"/>
+                <span>自動修正（直接輸出修正後全文）</span>
+              </label>
+              <label class="radio-item">
+                <input type="radio" name="typoMode" value="report"/>
+                <span>錯誤報告（列出所有錯誤與建議）</span>
+              </label>
+            </div>
+          </div>
+
+          <button class="btn-primary btn-full" onclick="runTypoCheck()" id="typoRunBtn">
+            <span>◎ 開始錯別字修訂</span>
+          </button>
+        </div>
+
+        <div class="tool-output-panel">
+          <div class="output-header">
+            <h3>修訂結果</h3>
+            <div class="output-actions" id="typoOutputActions" style="display:none">
+              <button class="btn-small" onclick="copyOutput('typoOutput')">複製</button>
+              <button class="btn-small" onclick="downloadOutput('typoOutput','修訂結果.txt')">下載</button>
+            </div>
+          </div>
+          <div class="output-area" id="typoOutput">
+            <div class="output-placeholder">
+              <div class="placeholder-icon">◎</div>
+              <p>上傳文章並點擊「開始錯別字修訂」<br/>系統將依據專案錯別字表進行掃描</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ARTICLE EDIT PAGE -->
+    <div class="page" id="page-article">
+      <div class="page-header">
+        <div class="page-header-text">
+          <h1 class="page-title">文章編輯潤稿</h1>
+          <p class="page-subtitle">AI 依範例格式與風格，修潤大標・中標・小標・Data・圖說</p>
+        </div>
+      </div>
+
+      <div class="article-status-bar" id="articleStatusBar">
+        <span class="article-sample-indicator" id="articleSampleIndicator">⚠ 尚未載入文章格式範例，請先至專案設定上傳</span>
+      </div>
+
+      <div class="tool-layout">
+        <div class="tool-input-panel">
+          <div class="panel-section">
+            <h3 class="panel-title">上傳待編輯文章</h3>
+            <div class="tab-group">
+              <button class="tab-btn active" onclick="switchTab('article','upload')">上傳檔案</button>
+              <button class="tab-btn" onclick="switchTab('article','paste')">貼上文字</button>
+            </div>
+            <div class="tab-content active" id="article-upload">
+              <div class="upload-zone" onclick="document.getElementById('articleFileInput').click()">
+                <input type="file" id="articleFileInput" accept=".txt,.docx" style="display:none" onchange="handleArticleFileUpload(event)"/>
+                <div class="upload-icon">↑</div>
+                <div class="upload-text">上傳文章檔案</div>
+                <div class="upload-hint">支援 .txt / .docx</div>
+              </div>
+              <div id="articleUploadStatus"></div>
+            </div>
+            <div class="tab-content" id="article-paste">
+              <textarea class="text-input" id="articlePasteText" placeholder="將文章貼上於此…" rows="12"></textarea>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <h3 class="panel-title">潤稿指示（可選）</h3>
+            <textarea class="text-input" id="articleExtraInstructions" placeholder="額外的編輯指示，例如：本書風格偏向輕鬆活潑、目標讀者為 30-40 歲女性…" rows="4"></textarea>
+          </div>
+
+          <div class="panel-section">
+            <h3 class="panel-title">文章層級設定</h3>
+            <div class="checkbox-group">
+              <label class="checkbox-item"><input type="checkbox" id="editH1" checked/><span>大標（H1）</span></label>
+              <label class="checkbox-item"><input type="checkbox" id="editH2" checked/><span>中標（H2）</span></label>
+              <label class="checkbox-item"><input type="checkbox" id="editH3" checked/><span>小標（H3）</span></label>
+              <label class="checkbox-item"><input type="checkbox" id="editData" checked/><span>Data 資訊框</span></label>
+              <label class="checkbox-item"><input type="checkbox" id="editCaption" checked/><span>圖說（Caption）</span></label>
+            </div>
+          </div>
+
+          <button class="btn-primary btn-full" onclick="runArticleEdit()" id="articleRunBtn">
+            <span>◆ 開始編輯潤稿</span>
+          </button>
+        </div>
+
+        <div class="tool-output-panel">
+          <div class="output-header">
+            <h3>潤稿結果</h3>
+            <div class="output-actions" id="articleOutputActions" style="display:none">
+              <button class="btn-small" onclick="copyOutput('articleOutput')">複製</button>
+              <button class="btn-small" onclick="downloadOutput('articleOutput','潤稿結果.txt')">下載</button>
+            </div>
+          </div>
+          <div class="output-area" id="articleOutput">
+            <div class="output-placeholder">
+              <div class="placeholder-icon">◆</div>
+              <p>上傳文章並點擊「開始編輯潤稿」<br/>AI 將依格式範例修潤各層級文字</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS PAGE -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div class="page-header-text">
+          <h1 class="page-title">API 設定</h1>
+          <p class="page-subtitle">設定 Claude API 金鑰以啟用 AI 功能</p>
+        </div>
+      </div>
+
+      <div class="settings-single">
+        <div class="api-setup-card">
+          <div class="api-setup-icon">◈</div>
+          <h2>Claude API 金鑰設定</h2>
+          <p>您的 API 金鑰僅儲存於瀏覽器本機，不會上傳至任何伺服器。</p>
+          <div class="api-input-group">
+            <input type="password" id="apiKeyInput" class="api-key-input" placeholder="sk-ant-api03-…" />
+            <button class="btn-primary" onclick="saveApiKey()">儲存金鑰</button>
+          </div>
+          <div class="api-key-status" id="apiKeyStatus"></div>
+          <div class="api-info">
+            <h4>如何取得 API 金鑰？</h4>
+            <ol>
+              <li>前往 <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></li>
+              <li>登入您的 Anthropic 帳號</li>
+              <li>至「API Keys」頁面建立新金鑰</li>
+              <li>複製金鑰貼上於上方輸入框</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="api-setup-card">
+          <div class="api-setup-icon">◉</div>
+          <h2>Google Drive 連結（選用）</h2>
+          <p>設定 Google OAuth Client ID 以啟用直接從 Google Drive 抓取檔案的功能。</p>
+          <div class="api-input-group">
+            <input type="text" id="googleClientIdInput" class="api-key-input" placeholder="your-client-id.apps.googleusercontent.com" />
+            <button class="btn-primary" onclick="saveGoogleClientId()">儲存</button>
+          </div>
+          <div class="api-key-status" id="googleClientIdStatus"></div>
+          <div class="api-info">
+            <h4>如何設定 Google OAuth？</h4>
+            <ol>
+              <li>前往 <a href="https://console.cloud.google.com" target="_blank">Google Cloud Console</a></li>
+              <li>建立專案，啟用 Google Drive API</li>
+              <li>建立 OAuth 2.0 憑證（Web 應用程式）</li>
+              <li>加入您的 GitHub Pages 網址為授權來源</li>
+              <li>複製 Client ID 貼上於上方</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="api-setup-card danger-card">
+          <div class="api-setup-icon">◌</div>
+          <h2>清除所有資料</h2>
+          <p>清除瀏覽器中儲存的所有專案資料、設定與 API 金鑰。此操作無法復原。</p>
+          <button class="btn-danger" onclick="clearAllData()">清除所有本機資料</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- NEW PROJECT MODAL -->
+  <div class="modal-overlay" id="newProjectModal" style="display:none">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>建立新書專案</h3>
+        <button class="modal-close" onclick="closeModal('newProjectModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>書名 *</label>
+          <input type="text" id="newProjectName" class="form-input" placeholder="例：2025 日本旅遊全攻略"/>
+        </div>
+        <div class="form-group">
+          <label>書系 / 出版社</label>
+          <input type="text" id="newProjectSeries" class="form-input" placeholder="例：玩樂書系"/>
+        </div>
+        <div class="form-group">
+          <label>負責編輯</label>
+          <input type="text" id="newProjectEditor" class="form-input" placeholder="編輯姓名"/>
+        </div>
+        <div class="form-group">
+          <label>備註</label>
+          <textarea id="newProjectNote" class="form-input" rows="3" placeholder="專案說明、目標讀者、特殊要求…"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-outline" onclick="closeModal('newProjectModal')">取消</button>
+        <button class="btn-primary" onclick="createProject()">建立專案</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADING OVERLAY -->
+  <div class="loading-overlay" id="loadingOverlay" style="display:none">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <div class="loading-text" id="loadingText">AI 分析中，請稍候…</div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/projects.js"></script>
+  <script src="js/tools.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
