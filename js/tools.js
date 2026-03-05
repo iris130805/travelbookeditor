@@ -1,281 +1,263 @@
 /* ==========================================
-   Tools Module · 三大編輯功能
+   Projects Module · 專案管理
    ========================================== */
 
-// ══════════════════════════════════════════════
-// Shared file upload for tools
-// ══════════════════════════════════════════════
-let toolFileContents = {
-  newbook: '',
-  typo: '',
-  article: '',
+const Projects = {
+
+  // ── Render projects grid ──────────────────
+  render() {
+    const projects = Storage.getAllProjects();
+    const grid = document.getElementById('projectsGrid');
+    const empty = document.getElementById('projectsEmpty');
+    const currentId = Storage.getCurrentProjectId();
+
+    grid.innerHTML = '';
+
+    if (projects.length === 0) {
+      empty.style.display = 'block';
+      grid.style.display = 'none';
+      return;
+    }
+
+    empty.style.display = 'none';
+    grid.style.display = 'grid';
+
+    projects.forEach(p => {
+      const isActive = p.id === currentId;
+      const card = document.createElement('div');
+      card.className = 'project-card' + (isActive ? ' active-project' : '');
+      card.innerHTML = `
+        <div class="project-card-header">
+          <div class="project-card-name">${escHtml(p.name)}</div>
+          ${isActive ? '<span class="project-card-badge">使用中</span>' : ''}
+        </div>
+        ${p.series ? `<div class="project-card-meta">📚 ${escHtml(p.series)}</div>` : ''}
+        ${p.editor ? `<div class="project-card-meta">✏️ ${escHtml(p.editor)}</div>` : ''}
+        <div class="project-card-date">建立於 ${formatDate(p.createdAt)} · 更新 ${formatDate(p.updatedAt)}</div>
+        <div class="project-card-status">
+          <span class="status-chip ${p.typoTable ? 'set' : ''}">
+            ${p.typoTable ? '✓' : '○'} 錯別字表
+          </span>
+          <span class="status-chip ${p.articleSample ? 'set' : ''}">
+            ${p.articleSample ? '✓' : '○'} 文章範例
+          </span>
+          <span class="status-chip ${p.newbookSample ? 'set' : ''}">
+            ${p.newbookSample ? '✓' : '○'} 新書資料範例
+          </span>
+        </div>
+        <div class="project-card-actions">
+          ${!isActive ? `<button class="btn-primary" onclick="Projects.selectProject('${p.id}')">選用此專案</button>` : ''}
+          <button class="btn-outline" onclick="Projects.openSettings('${p.id}')">⚙ 設定</button>
+          <button class="btn-outline" onclick="Projects.confirmDelete('${p.id}', '${escHtml(p.name)}')">刪除</button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  },
+
+  // ── Render recent projects on dashboard ───
+  renderRecent() {
+    const projects = Storage.getAllProjects().slice(0, 5);
+    const container = document.getElementById('recentProjectsList');
+    if (!projects.length) {
+      container.innerHTML = '<p style="color:var(--ink-faint);font-size:13px">尚無專案，點擊「進入專案管理」建立第一本書</p>';
+      return;
+    }
+    const currentId = Storage.getCurrentProjectId();
+    container.innerHTML = projects.map(p => `
+      <div class="recent-project-item" onclick="Projects.selectProject('${p.id}')">
+        <div>
+          <div class="recent-project-item-name">${escHtml(p.name)} ${p.id === currentId ? '<span class="project-card-badge" style="font-size:9px">使用中</span>' : ''}</div>
+          <div class="recent-project-item-meta">${p.editor ? p.editor + ' · ' : ''}更新 ${formatDate(p.updatedAt)}</div>
+        </div>
+        <span style="color:var(--border-strong);font-size:18px">→</span>
+      </div>
+    `).join('');
+  },
+
+  // ── Select active project ─────────────────
+  selectProject(id) {
+    Storage.setCurrentProjectId(id);
+    App.updateCurrentProjectUI();
+    this.render();
+    this.renderRecent();
+    showPage('dashboard');
+    App.showToast('專案已切換');
+  },
+
+  // ── Open project settings ─────────────────
+  openSettings(id) {
+    Storage.setCurrentProjectId(id);
+    App.updateCurrentProjectUI();
+    const project = Storage.getProject(id);
+    document.getElementById('projectSettingsTitle').textContent = `${project.name}｜專案設定`;
+    // Update upload statuses
+    updateUploadStatus('typoTableStatus', project.typoTable, '錯別字表已載入');
+    updateUploadStatus('articleSampleStatus', project.articleSample, '文章格式範例已載入');
+    updateUploadStatus('newbookSampleStatus', project.newbookSample, '新書資料範例已載入');
+    showPage('project-settings');
+  },
+
+  // ── Delete project ────────────────────────
+  confirmDelete(id, name) {
+    if (confirm(`確定要刪除專案「${name}」嗎？\n此操作無法復原，所有設定資料將一併刪除。`)) {
+      Storage.deleteProject(id);
+      App.updateCurrentProjectUI();
+      this.render();
+      this.renderRecent();
+      App.showToast('專案已刪除');
+    }
+  },
 };
 
-async function handleNewbookFileUpload(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  try {
-    const text = await readFileAsText(file);
-    toolFileContents.newbook = text;
-    document.getElementById('newbookUploadStatus').innerHTML =
-      `<span style="color:var(--sage)">✓ 已讀取「${file.name}」（${text.length.toLocaleString()} 字）</span>`;
-  } catch (err) {
-    document.getElementById('newbookUploadStatus').innerHTML =
-      `<span style="color:var(--terracotta)">✗ 讀取失敗：${err.message}</span>`;
+// ── Create project (called from modal) ───────
+function createProject() {
+  const name = document.getElementById('newProjectName').value.trim();
+  if (!name) {
+    alert('請輸入書名');
+    return;
   }
-}
-
-async function handleTypoFileUpload(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  try {
-    const text = await readFileAsText(file);
-    toolFileContents.typo = text;
-    document.getElementById('typoUploadStatus').innerHTML =
-      `<span style="color:var(--sage)">✓ 已讀取「${file.name}」（${text.length.toLocaleString()} 字）</span>`;
-  } catch (err) {
-    document.getElementById('typoUploadStatus').innerHTML =
-      `<span style="color:var(--terracotta)">✗ 讀取失敗：${err.message}</span>`;
-  }
-}
-
-async function handleArticleFileUpload(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  try {
-    const text = await readFileAsText(file);
-    toolFileContents.article = text;
-    document.getElementById('articleUploadStatus').innerHTML =
-      `<span style="color:var(--sage)">✓ 已讀取「${file.name}」（${text.length.toLocaleString()} 字）</span>`;
-  } catch (err) {
-    document.getElementById('articleUploadStatus').innerHTML =
-      `<span style="color:var(--terracotta)">✗ 讀取失敗：${err.message}</span>`;
-  }
-}
-
-// ══════════════════════════════════════════════
-// Tab switching
-// ══════════════════════════════════════════════
-function switchTab(tool, tab) {
-  const tabBtns = document.querySelectorAll(`#page-${tool} .tab-btn`);
-  const tabContents = document.querySelectorAll(`#page-${tool} .tab-content`);
-  tabBtns.forEach(btn => {
-    btn.classList.toggle('active', btn.getAttribute('onclick').includes(`'${tab}'`));
+  const project = Storage.createProject({
+    name,
+    series: document.getElementById('newProjectSeries').value.trim(),
+    editor: document.getElementById('newProjectEditor').value.trim(),
+    note: document.getElementById('newProjectNote').value.trim(),
   });
-  tabContents.forEach(content => {
-    content.classList.toggle('active', content.id === `${tool}-${tab}`);
+  Storage.setCurrentProjectId(project.id);
+  closeModal('newProjectModal');
+  App.updateCurrentProjectUI();
+  Projects.render();
+  Projects.renderRecent();
+
+  // Clear form
+  ['newProjectName','newProjectSeries','newProjectEditor','newProjectNote'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+
+  // Immediately go to settings
+  Projects.openSettings(project.id);
+  App.showToast('專案建立成功！請上傳相關資料庫');
+}
+
+function openNewProjectModal() {
+  document.getElementById('newProjectModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('newProjectName').focus(), 100);
+}
+
+// ── File upload handlers for project settings ─
+async function handleTypoTableUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const raw = await readFileAsText(file);
+  const parsed = parseTypoTable(raw);
+  const id = Storage.getCurrentProjectId();
+  if (!id) { alert('請先選擇專案'); return; }
+  Storage.updateProject(id, { typoTable: { raw, parsed, filename: file.name } });
+  updateUploadStatus('typoTableStatus', true, `✓ 已載入「${file.name}」，共 ${parsed.length} 條修訂規則`);
+  App.updateToolStatusBars();
+  App.showToast('錯別字表已更新');
+}
+
+async function handleArticleSampleUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const raw = await readFileAsText(file);
+  const id = Storage.getCurrentProjectId();
+  if (!id) { alert('請先選擇專案'); return; }
+  Storage.updateProject(id, { articleSample: { raw, filename: file.name } });
+  updateUploadStatus('articleSampleStatus', true, `✓ 已載入「${file.name}」`);
+  App.updateToolStatusBars();
+  App.showToast('文章格式範例已更新');
+}
+
+async function handleNewbookSampleUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const raw = await readFileAsText(file);
+  const id = Storage.getCurrentProjectId();
+  if (!id) { alert('請先選擇專案'); return; }
+  Storage.updateProject(id, { newbookSample: { raw, filename: file.name } });
+  updateUploadStatus('newbookSampleStatus', true, `✓ 已載入「${file.name}」`);
+  App.showToast('新書資料範例已更新');
+}
+
+function exportProject() {
+  const id = Storage.getCurrentProjectId();
+  if (!id) { alert('請先選擇專案'); return; }
+  Storage.exportProject(id);
+}
+
+function importProject(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const project = Storage.importProject(e.target.result);
+      Storage.setCurrentProjectId(project.id);
+      App.updateCurrentProjectUI();
+      Projects.render();
+      App.showToast(`已匯入專案：${project.name}`);
+      showPage('projects');
+    } catch (err) {
+      alert('匯入失敗：' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ── Helpers ──────────────────────────────────
+function parseTypoTable(raw) {
+  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  const rules = [];
+  for (const line of lines) {
+    const sep = line.includes('→') ? '→' : line.includes('：') ? '：' : line.includes(':') ? ':' : null;
+    if (!sep) continue;
+    const [wrong, correct] = line.split(sep).map(s => s.trim());
+    if (wrong && correct) rules.push({ wrong, correct });
+  }
+  return rules;
+}
+
+async function readFileAsText(file) {
+  if (file.name.endsWith('.docx')) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const result = await mammoth.extractRawText({ arrayBuffer: e.target.result });
+          resolve(result.value);
+        } catch (err) { reject(err); }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.onerror = reject;
+    reader.readAsText(file, 'UTF-8');
   });
 }
 
-// ══════════════════════════════════════════════
-// Get content for current tool
-// ══════════════════════════════════════════════
-function getToolContent(tool) {
-  const uploadTab = document.getElementById(`${tool}-upload`);
-  const isUploadActive = uploadTab && uploadTab.classList.contains('active');
-  if (isUploadActive) {
-    return toolFileContents[tool];
-  }
-  const pasteArea = document.getElementById(`${tool}PasteText`);
-  return pasteArea ? pasteArea.value.trim() : '';
-}
-
-// ══════════════════════════════════════════════
-// FEATURE 1：新書資料產生器
-// ══════════════════════════════════════════════
-async function runNewbookGeneration() {
-  if (!API.isConfigured()) {
-    alert('請先至「API 設定」頁面輸入 Claude API 金鑰');
-    showPage('settings');
-    return;
-  }
-
-  const content = getToolContent('newbook');
-  if (!content) {
-    alert('請上傳書稿或貼上文字內容');
-    return;
-  }
-
-  const options = {
-    genSellingPoints: document.getElementById('genSellingPoints').checked,
-    genTargetReaders: document.getElementById('genTargetReaders').checked,
-    genFeatures: document.getElementById('genFeatures').checked,
-    genFollowSample: document.getElementById('genFollowSample').checked,
-  };
-
-  if (!options.genSellingPoints && !options.genTargetReaders && !options.genFeatures) {
-    alert('請至少勾選一個產生項目');
-    return;
-  }
-
-  const project = Storage.getCurrentProject();
-  const sampleTemplate = (options.genFollowSample && project?.newbookSample?.raw) || null;
-
-  const { systemPrompt, userMsg } = await API.generateNewbookData(content, options, sampleTemplate);
-
-  const outputEl = document.getElementById('newbookOutput');
-  outputEl.innerHTML = '<span class="streaming-cursor"></span>';
-  document.getElementById('newbookOutputActions').style.display = 'none';
-  document.getElementById('newbookRunBtn').disabled = true;
-
-  showLoading('AI 分析書稿中，正在產生新書資料…');
-
-  let result = '';
-  try {
-    await API.stream(systemPrompt, userMsg, (chunk) => {
-      result += chunk;
-      outputEl.textContent = result;
-    }, 4000);
-
-    outputEl.textContent = result;
-    document.getElementById('newbookOutputActions').style.display = 'flex';
-    App.showToast('新書資料產生完成！');
-  } catch (err) {
-    outputEl.innerHTML = `<span style="color:var(--terracotta)">✗ 錯誤：${err.message}</span>`;
-  } finally {
-    hideLoading();
-    document.getElementById('newbookRunBtn').disabled = false;
+function updateUploadStatus(elementId, hasData, message) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  if (hasData) {
+    el.style.color = 'var(--sage)';
+    el.textContent = message || '已載入';
+  } else {
+    el.style.color = 'var(--ink-faint)';
+    el.textContent = '';
   }
 }
 
-// ══════════════════════════════════════════════
-// FEATURE 2：錯別字修訂
-// ══════════════════════════════════════════════
-async function runTypoCheck() {
-  if (!API.isConfigured()) {
-    alert('請先至「API 設定」頁面輸入 Claude API 金鑰');
-    showPage('settings');
-    return;
-  }
-
-  const content = getToolContent('typo');
-  if (!content) {
-    alert('請上傳文章或貼上文字內容');
-    return;
-  }
-
-  const project = Storage.getCurrentProject();
-  if (!project?.typoTable?.raw) {
-    if (!confirm('目前專案尚未載入錯別字表，將由 AI 依語境判斷常見錯別字。是否繼續？')) return;
-  }
-
-  const typoTableText = project?.typoTable?.raw || '（未提供錯別字修訂表，請依繁體中文常見錯別字規範判斷）';
-  const mode = document.querySelector('input[name="typoMode"]:checked')?.value || 'highlight';
-
-  const { systemPrompt, userMsg } = API.buildTypoPrompts(content, typoTableText, mode);
-
-  const outputEl = document.getElementById('typoOutput');
-  outputEl.innerHTML = '<span class="streaming-cursor"></span>';
-  document.getElementById('typoOutputActions').style.display = 'none';
-  document.getElementById('typoRunBtn').disabled = true;
-
-  showLoading('AI 掃描中，正在比對錯別字修訂表…');
-
-  let result = '';
-  try {
-    await API.stream(systemPrompt, userMsg, (chunk) => {
-      result += chunk;
-      outputEl.textContent = result;
-    }, 4000);
-
-    outputEl.textContent = result;
-    document.getElementById('typoOutputActions').style.display = 'flex';
-    App.showToast('錯別字修訂完成！');
-  } catch (err) {
-    outputEl.innerHTML = `<span style="color:var(--terracotta)">✗ 錯誤：${err.message}</span>`;
-  } finally {
-    hideLoading();
-    document.getElementById('typoRunBtn').disabled = false;
-  }
+function formatDate(isoString) {
+  if (!isoString) return '—';
+  const d = new Date(isoString);
+  return d.toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-// ══════════════════════════════════════════════
-// FEATURE 3：文章編輯潤稿
-// ══════════════════════════════════════════════
-async function runArticleEdit() {
-  if (!API.isConfigured()) {
-    alert('請先至「API 設定」頁面輸入 Claude API 金鑰');
-    showPage('settings');
-    return;
-  }
-
-  const content = getToolContent('article');
-  if (!content) {
-    alert('請上傳文章或貼上文字內容');
-    return;
-  }
-
-  const project = Storage.getCurrentProject();
-  const articleSample = project?.articleSample?.raw || null;
-
-  const levels = {
-    editH1: document.getElementById('editH1').checked,
-    editH2: document.getElementById('editH2').checked,
-    editH3: document.getElementById('editH3').checked,
-    editData: document.getElementById('editData').checked,
-    editCaption: document.getElementById('editCaption').checked,
-  };
-
-  if (!Object.values(levels).some(Boolean)) {
-    alert('請至少勾選一個文章層級');
-    return;
-  }
-
-  const extraInstructions = document.getElementById('articleExtraInstructions').value.trim();
-  const { systemPrompt, userMsg } = API.buildArticlePrompts(content, articleSample, levels, extraInstructions);
-
-  const outputEl = document.getElementById('articleOutput');
-  outputEl.innerHTML = '<span class="streaming-cursor"></span>';
-  document.getElementById('articleOutputActions').style.display = 'none';
-  document.getElementById('articleRunBtn').disabled = true;
-
-  showLoading('AI 潤稿中，正在依照格式範例修潤文章…');
-
-  let result = '';
-  try {
-    await API.stream(systemPrompt, userMsg, (chunk) => {
-      result += chunk;
-      outputEl.textContent = result;
-    }, 4000);
-
-    outputEl.textContent = result;
-    document.getElementById('articleOutputActions').style.display = 'flex';
-    App.showToast('文章潤稿完成！');
-  } catch (err) {
-    outputEl.innerHTML = `<span style="color:var(--terracotta)">✗ 錯誤：${err.message}</span>`;
-  } finally {
-    hideLoading();
-    document.getElementById('articleRunBtn').disabled = false;
-  }
-}
-
-// ══════════════════════════════════════════════
-// Output utilities
-// ══════════════════════════════════════════════
-function copyOutput(elementId) {
-  const text = document.getElementById(elementId).textContent;
-  navigator.clipboard.writeText(text).then(() => App.showToast('已複製到剪貼簿'));
-}
-
-function downloadOutput(elementId, filename) {
-  const text = document.getElementById(elementId).textContent;
-  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-// ══════════════════════════════════════════════
-// Loading overlay
-// ══════════════════════════════════════════════
-function showLoading(text) {
-  document.getElementById('loadingText').textContent = text || 'AI 處理中，請稍候…';
-  document.getElementById('loadingOverlay').style.display = 'flex';
-}
-
-function hideLoading() {
-  document.getElementById('loadingOverlay').style.display = 'none';
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
